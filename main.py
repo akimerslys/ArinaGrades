@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardBuilder, InlineKeyboardMarkup
 
 import config
-from config import subjects_9_grade, status, key, admin_users
+from config import subjects_9_grade, marks, key, admin_users
 
 from loguru import logger
 from logg import LoggingMiddleware
@@ -110,9 +110,8 @@ async def update_mark(call: CallbackQuery):
     id_, mark = data[-2], int(data[-1])
 
     subjects = json.loads(await redis_client.get(key))
-    if mark == -1:
-        subjects[id_].append(-1)
-    elif mark == -2:
+
+    if mark == -2:
         subjects[id_] = list(filter(lambda x: x != -1, subjects[id_]))
     elif mark == 0:
         if -1 in subjects[id_]:
@@ -122,6 +121,7 @@ async def update_mark(call: CallbackQuery):
             await call.answer('НЕМА ОЦІНОК', show_alert=True)
         subjects[id_][0] = get_avg(subjects[id_])
     else:
+        # -1 and normal mark
         subjects[id_][0] = 1
         subjects[id_].append(mark)
 
