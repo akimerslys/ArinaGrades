@@ -166,8 +166,9 @@ async def setup_db():
 
 async def on_startup() -> None:
     logger.info("bot starting...")
-
-    await setup_db()
+    print(await redis_client.exists(key))
+    if not await redis_client.exists(key):
+        await setup_db()
 
     dp.update.outer_middleware(LoggingMiddleware())
 
