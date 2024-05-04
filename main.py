@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardBuilder, InlineKeyboardMarkup
 
 import config
-from config import subjects_9_grade, marks, key, admin_users
+from config import subjects_9_grade, status, key, admin_users
 
 from loguru import logger
 from logg import LoggingMiddleware
@@ -48,8 +48,8 @@ def subjects_kb():
 def subject_kb(id: int):
     id = str(id)
     keyboard = InlineKeyboardBuilder()
-    keyboard.add(InlineKeyboardButton(text=marks[0] + ' Очистити', callback_data=f"subject_status_{id}_0"))
-    keyboard.add(InlineKeyboardButton(text=marks[1] + ' Оновити', callback_data=f"subject_status_{id}_1"))
+    keyboard.add(InlineKeyboardButton(text=status[0] + ' Очистити', callback_data=f"subject_status_{id}_0"))
+    keyboard.add(InlineKeyboardButton(text=status[1] + ' Оновити', callback_data=f"subject_status_{id}_1"))
     keyboard.add(InlineKeyboardButton(text='✅ Закрити', callback_data=f"subject_mark_{id}_0"))
     #keyboard.add(InlineKeyboardButton(text='123', callback_data=f"subject_status_{id}_3"))
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data=f"subjects_menu"))
@@ -67,7 +67,7 @@ async def get_text(subjects: dict | None = None):
         marks = ((', '.join([str(x) for x in subjects[str_i][1:]])).replace('-1', '?') +
                                      (' (сер. бал ' + str(subjects[str_i][0]) + ')' if subjects[str_i][0] > 1 else ''))
 
-        text += f"{marks[subjects[str_i][0]]} {subject}:  {marks}\n"
+        text += f"{status[subjects[str_i][0]]} {subject}:  {marks}\n"
     return text
 
 
@@ -114,11 +114,15 @@ async def update_mark(call: CallbackQuery):
     if mark == -2:
         subjects[id_] = list(filter(lambda x: x != -1, subjects[id_]))
     elif mark == 0:
+		if call.from_user.id not in admin_users:
+	    		await call.answer('Ви не Аріна', show_alert=True)
+	    		return
         if -1 in subjects[id_]:
             await call.answer('Ви не можете закрити предмет поки є невідомі оцінки', show_alert=True)
             return
         if len(subjects[id_]) < 2:
             await call.answer('НЕМА ОЦІНОК', show_alert=True)
+	    return
         subjects[id_][0] = get_avg(subjects[id_])
     else:
         # -1 and normal mark
