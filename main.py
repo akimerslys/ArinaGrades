@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardBuilder, InlineKeyboardMarkup
 
 import config
-from config import subjects_9_grade, status, key, admin_users
+from config import subjects_9_grade, marks, key, admin_users
 
 from loguru import logger
 from logg import LoggingMiddleware
@@ -48,8 +48,8 @@ def subjects_kb():
 def subject_kb(id: int):
     id = str(id)
     keyboard = InlineKeyboardBuilder()
-    keyboard.add(InlineKeyboardButton(text=status[0] + ' Очистити', callback_data=f"subject_status_{id}_0"))
-    keyboard.add(InlineKeyboardButton(text=status[1] + ' Оновити', callback_data=f"subject_status_{id}_1"))
+    keyboard.add(InlineKeyboardButton(text=marks[0] + ' Очистити', callback_data=f"subject_status_{id}_0"))
+    keyboard.add(InlineKeyboardButton(text=marks[1] + ' Оновити', callback_data=f"subject_status_{id}_1"))
     keyboard.add(InlineKeyboardButton(text='✅ Закрити', callback_data=f"subject_mark_{id}_0"))
     #keyboard.add(InlineKeyboardButton(text='123', callback_data=f"subject_status_{id}_3"))
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data=f"subjects_menu"))
@@ -57,17 +57,21 @@ def subject_kb(id: int):
     return keyboard.as_markup(resize_keyboard=True)
 
 
-async def get_text(subjects: dict | None = None):
+async def get_text(subjects: dict | None = None, joke: bool = False):
+    print(joke)
     text = 'Оцінки:\n\n'
-    if not subjects:
-        redis_ff = await redis_client.get(key)
-        subjects = json.loads(redis_ff)
+    if not joke:
+        if not subjects:
+            redis_ff = await redis_client.get(key)
+            subjects = json.loads(redis_ff)
+    else:
+        subjects = {"0": [12, 12], "1": [12, 12], "2": [12, 12], "3": [12, 12], "4": [12, 12], "5": [12, 12], "6": [12, 12], "7": [12, 12], "8": [12, 12], "9": [12, 12], "10": [12, 12], "11": [12, 12], "12": [12, 12], "13": [12, 12], "14": [12, 12], "15": [12, 12], "16": [12, 12]}
     for i, subject in enumerate(subjects_9_grade, start=0):
         str_i = str(i)
-        marks = ((', '.join([str(x) for x in subjects[str_i][1:]])).replace('-1', '?') +
-                                     (' (сер. бал ' + str(subjects[str_i][0]) + ')' if subjects[str_i][0] > 1 else ''))
 
-        text += f"{status[subjects[str_i][0]]} {subject}:  {marks}\n"
+        subject_marks = ((', '.join([str(x) for x in subjects[str_i][1:]])).replace('-1', '?') +
+                                     (' (сер. бал ' + str(subjects[str_i][0]) + ')' if subjects[str_i][0] > 1 else ''))
+        text += f"{marks[subjects[str_i][0]]} {subject}:  {subject_marks}\n"
     return text
 
 
@@ -106,6 +110,10 @@ async def update_mark(call: CallbackQuery):
         array_avg = round(summ / lenn)
         return array_avg
 
+    if call.from_user.id not in admin_users:
+        await call.answer('Ви не Аріна', show_alert=True)
+        return
+
     data = call.data.split('_')
     id_, mark = data[-2], int(data[-1])
 
@@ -114,15 +122,12 @@ async def update_mark(call: CallbackQuery):
     if mark == -2:
         subjects[id_] = list(filter(lambda x: x != -1, subjects[id_]))
     elif mark == 0:
-		if call.from_user.id not in admin_users:
-	    		await call.answer('Ви не Аріна', show_alert=True)
-	    		return
         if -1 in subjects[id_]:
             await call.answer('Ви не можете закрити предмет поки є невідомі оцінки', show_alert=True)
             return
         if len(subjects[id_]) < 2:
             await call.answer('НЕМА ОЦІНОК', show_alert=True)
-	    return
+            return
         subjects[id_][0] = get_avg(subjects[id_])
     else:
         # -1 and normal mark
@@ -134,15 +139,21 @@ async def update_mark(call: CallbackQuery):
     await call.message.edit_text(text, reply_markup=subjects_kb())
 
 
+@dp.message(F.photo)
+async def update_photo(message: Message, bot: Bot):
+    await message.answer(f'Thank you!')
+    await bot.forward_message(admin_users[0], message.from_user.id, message.message_id)
+
+
 @dp.message()
 async def subjects(message: Message):
-    text = await get_text()
+    text = await get_text(joke=message.from_user.id not in admin_users)
     await message.answer(text, reply_markup=subjects_kb())
 
 
 @dp.callback_query()
 async def subjects_call(call: CallbackQuery):
-    text = await get_text()
+    text = await get_text(joke=call.from_user.id not in admin_users)
     await call.message.edit_text(text, reply_markup=subjects_kb())
 
 
