@@ -58,7 +58,6 @@ def subject_kb(id: int):
 
 
 async def get_text(subjects: dict | None = None, joke: bool = False):
-    print(joke)
     text = 'Оцінки:\n\n'
     if not joke:
         if not subjects:
@@ -166,7 +165,6 @@ async def setup_db():
 
 async def on_startup() -> None:
     logger.info("bot starting...")
-    print(await redis_client.exists(key))
     if not await redis_client.exists(key):
         await setup_db()
 
