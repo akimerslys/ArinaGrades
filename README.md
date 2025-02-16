@@ -1,6 +1,4 @@
-Sister Performance Monitor Bot
-
-This is a Telegram bot that helps you monitor your sister's performance and allows her to track her own progress. The bot uses Redis for data storage and requires minimal setup.
+This is a Telegram bot that helps you monitor your sister's (or brother/child) performance and allows her to track her own progress. The bot uses Redis for data storage and requires minimal setup.
 
 Features:
 
@@ -8,7 +6,7 @@ Track and log performance metrics
 
 Provide insights and reminders
 
-Allow both you and your sister to view progress
+Allow both you and your child to monitor progress
 
 
 Setup:
