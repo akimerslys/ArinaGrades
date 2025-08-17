@@ -1,4 +1,4 @@
-This is a Telegram bot that helps you monitor your sister's (or brother/child) performance and allows her to track her own progress. The bot uses Redis for data storage and requires minimal setup.
+This is a Telegram bot that helped me and my sister to track her own progress. The bot uses Redis for data storage and requires minimal setup.
 
 # Features:
 
